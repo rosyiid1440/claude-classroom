@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Management System</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 Classroom Management System</h1>
+            <div class="stats">
+                <span id="clientCount">0 clients connected</span>
+                <span id="serverTime"></span>
+            </div>
+        </header>
+
+        <nav class="toolbar">
+            <button id="refreshBtn">🔄 Refresh</button>
+            <button id="broadcastBtn">📢 Broadcast Message</button>
+            <button id="powerControlBtn">⚡ Power Control</button>
+            <button id="fileManagerBtn">📁 File Manager</button>
+        </nav>
+
+        <main class="main-content">
+            <div class="client-grid" id="clientGrid">
+                <!-- Client cards will be populated here -->
+            </div>
+        </main>
+
+        <!-- Modals -->
+        <div id="messageModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Send Message</h2>
+                <textarea id="messageText" placeholder="Enter your message..."></textarea>
+                <div class="modal-buttons">
+                    <button id="sendMessageBtn">Send</button>
+                    <button id="cancelMessageBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="remoteControlModal" class="modal">
+            <div class="modal-content remote-control">
+                <span class="close">&times;</span>
+                <h2>Remote Control - <span id="remoteClientName"></span></h2>
+                <div class="remote-screen" id="remoteScreen">
+                    <img id="remoteScreenImg" src="" alt="Remote screen">
+                </div>
+                <div class="remote-controls">
+                    <button id="stopRemoteBtn">Stop Control</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="fileManagerModal" class="modal">
+            <div class="modal-content file-manager">
+                <span class="close">&times;</span>
+                <h2>File Manager - <span id="fileManagerClientName"></span></h2>
+                <div class="file-manager-content">
+                    <div class="file-path">
+                        <input type="text" id="currentPath" value="C:\\" readonly>
+                        <button id="navigateBtn">Go</button>
+                    </div>
+                    <div class="file-list" id="fileList">
+                        <!-- File list will be populated here -->
+                    </div>
+                </div>
+                <div class="file-operations">
+                    <button id="uploadFileBtn">Upload File</button>
+                    <button id="createFolderBtn">Create Folder</button>
+                    <button id="deleteFileBtn">Delete Selected</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+
+</html>
