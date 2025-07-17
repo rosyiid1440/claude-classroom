@@ -43,6 +43,11 @@ class ClassroomManager {
             this.showProgramResult(data.client_id, data.result);
         });
 
+        // <<< LISTENER BARU UNTUK REMOTE CONTROL >>>
+        this.socket.on('remote_screen_update', (data) => {
+            this.updateRemoteScreen(data.client_id, data.image);
+        });
+
         // UI event listeners
         document.getElementById('refreshBtn').addEventListener('click', () => {
             this.refreshClients();
@@ -117,6 +122,10 @@ class ClassroomManager {
             this.deleteSelected();
         });
 
+        document.querySelector("#remoteControlModal .close").addEventListener("click", () => {
+            this.stopRemoteControl();
+        });
+
         // Close modal listeners
         document.querySelectorAll('.close').forEach(closeBtn => {
             closeBtn.addEventListener('click', (e) => {
@@ -129,6 +138,15 @@ class ClassroomManager {
         window.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) {
                 e.target.style.display = 'none';
+            }
+        });
+    }
+
+    renderClientList(clients) {
+        this.clients.clear();
+        clients.forEach(client => {
+            if (client.id && client.info) {
+                this.addClient(client.id, client.info);
             }
         });
     }
@@ -150,10 +168,11 @@ class ClassroomManager {
         }
     }
 
+    // <<< UPDATE SCREENSHOT >>>
     updateScreenshot(clientId, thumbnail) {
-        if (this.clients.has(clientId)) {
-            this.clients.get(clientId).screenshot = thumbnail;
-            this.renderClients();
+        const screenshotElement = document.getElementById(`screenshot-${clientId}`);
+        if (screenshotElement) {
+            screenshotElement.src = `data:image/jpeg;base64,${thumbnail}`;
         }
     }
 
@@ -174,9 +193,7 @@ class ClassroomManager {
         const card = document.createElement('div');
         card.className = `client-card ${client.status}`;
 
-        const screenshotSrc = client.screenshot
-            ? `data:image/jpeg;base64,${client.screenshot}`
-            : '/static/images/no-screenshot.png';
+        const screenshotSrc = `data:image/jpeg;base64,${client.screenshot}`;
 
         card.innerHTML = `
             <div class="client-header">
@@ -184,8 +201,7 @@ class ClassroomManager {
                 <div class="client-status ${client.status}">${client.status}</div>
             </div>
             <div class="client-screenshot">
-                <img src="${screenshotSrc}" alt="Screenshot" 
-                     onerror="this.src='/static/images/no-screenshot.png'">
+                <img id="screenshot-${clientId}" src="${screenshotSrc}" alt="Screen">
             </div>
             <div class="client-info">
                 <div>IP: ${client.info.ip_address}</div>
@@ -227,36 +243,54 @@ class ClassroomManager {
     }
 
     startRemoteControl(clientId) {
+        if (!this.clients.has(clientId)) return;
+
         this.selectedClient = clientId;
         this.remoteControlActive = true;
 
         const modal = document.getElementById('remoteControlModal');
         const clientName = document.getElementById('remoteClientName');
+        const remoteScreenImg = document.getElementById('remoteScreenImg');
 
         clientName.textContent = this.clients.get(clientId).info.hostname;
+        // Tampilkan placeholder atau gambar loading awal
+        remoteScreenImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; // Gambar transparan
         modal.style.display = 'block';
 
-        // Start remote control
+        // Beritahu server untuk memulai stream remote control
         this.socket.emit('remote_control', {
             client_id: clientId,
             action: 'start'
         });
 
-        // Make remote screen focusable for keyboard events
-        document.getElementById('remoteScreen').setAttribute('tabindex', '0');
-        document.getElementById('remoteScreen').focus();
+        // Fokuskan elemen agar bisa menerima input keyboard
+        const remoteScreen = document.getElementById('remoteScreen');
+        remoteScreen.setAttribute('tabindex', '0');
+        remoteScreen.focus();
     }
 
     stopRemoteControl() {
         if (!this.remoteControlActive) return;
 
+        // Beritahu server untuk menghentikan stream
         this.socket.emit('remote_control', {
             client_id: this.selectedClient,
             action: 'stop'
         });
 
         this.remoteControlActive = false;
+        this.selectedClient = null;
         this.hideModal('remoteControlModal');
+        // Kosongkan gambar saat modal ditutup
+        document.getElementById('remoteScreenImg').src = '';
+    }
+
+    updateRemoteScreen(clientId, image) {
+        // Hanya perbarui gambar jika modal remote control aktif untuk klien yang sesuai
+        if (this.remoteControlActive && this.selectedClient === clientId) {
+            const remoteScreenImg = document.getElementById('remoteScreenImg');
+            remoteScreenImg.src = `data:image/jpeg;base64,${image}`;
+        }
     }
 
     handleRemoteClick(e) {

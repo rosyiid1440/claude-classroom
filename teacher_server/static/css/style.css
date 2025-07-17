@@ -416,9 +416,9 @@ header h1 {
     }
 }
 
-.client-card {
+/* .client-card {
     animation: fadeIn 0.5s ease-out;
-}
+} */
 
 /* Loading States */
 .loading {
